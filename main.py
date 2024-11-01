@@ -13,6 +13,10 @@ def get_discogs_releases_filename():
     return matching_files[0]
 
 def read_discogs_releases(filename):
+    """
+    Reads the discogs releases.xml file and yields each release element
+    Avoids loading the entire file into memory
+    """
     context = elemTree.iterparse(filename, events=("start", "end"))
     context = iter(context)
     event, root = next(context)
@@ -23,6 +27,10 @@ def read_discogs_releases(filename):
             root.clear()
 
 def extract_release_data(release):
+    """
+    Extracts the data from a release element
+    Utilizes 5 bars to separate joined data for splitting or replacing later
+    """
     release_id = release.get('id')
     title = release.findtext('title')
     country = release.findtext('country')
@@ -55,10 +63,12 @@ def main():
         releases = read_discogs_releases(filename)
         
         csv_filename = filename.replace('.xml', '.csv')
+        # Create the CSV file and write the header
         with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow(['id', 'titles', 'artists', 'country', 'genres', 'styles', 'dataQuality', 'trackList', 'images'])
             
+            # Write the data for each release
             for release in releases:
                 release_data = extract_release_data(release)
                 csv_writer.writerow(release_data)
